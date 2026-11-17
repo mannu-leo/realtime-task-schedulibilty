@@ -1,0 +1,1067 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Real-Time Task Schedulability Analyser | OS Monitor</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body class="dark-theme">
+  <!-- Main Application Wrapper -->
+  <div class="app-container">
+
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="app-brand">
+          <div class="brand-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+              <line x1="8" y1="21" x2="16" y2="21"></line>
+              <line x1="12" y1="17" x2="12" y2="21"></line>
+              <path d="M7 8h4M7 11h8"></path>
+            </svg>
+          </div>
+          <div class="brand-text">
+            <h2>RT-SCHED</h2>
+            <span class="brand-sub">Real-Time OS Analyser</span>
+          </div>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <button class="nav-item active" data-tab="dashboard">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="7" height="7"></rect>
+            <rect x="14" y="3" width="7" height="7"></rect>
+            <rect x="14" y="14" width="7" height="7"></rect>
+            <rect x="3" y="14" width="7" height="7"></rect>
+          </svg>
+          <span>Dashboard</span>
+        </button>
+
+        <button class="nav-item" data-tab="task-config">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="8" y1="6" x2="21" y2="6"></line>
+            <line x1="8" y1="12" x2="21" y2="12"></line>
+            <line x1="8" y1="18" x2="21" y2="18"></line>
+            <line x1="3" y1="6" x2="3.01" y2="6"></line>
+            <line x1="3" y1="12" x2="3.01" y2="12"></line>
+            <line x1="3" y1="18" x2="3.01" y2="18"></line>
+          </svg>
+          <span>Task Configuration</span>
+        </button>
+
+        <button class="nav-item" data-tab="schedulability">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+          </svg>
+          <span>Schedulability Analysis</span>
+        </button>
+
+        <button class="nav-item" data-tab="cpu-simulation">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+          </svg>
+          <span>CPU Simulation</span>
+        </button>
+
+        <button class="nav-item" data-tab="algorithm-comparison">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="20" x2="18" y2="10"></line>
+            <line x1="12" y1="20" x2="12" y2="4"></line>
+            <line x1="6" y1="20" x2="6" y2="14"></line>
+          </svg>
+          <span>Algorithm Comparison</span>
+        </button>
+
+        <button class="nav-item" data-tab="simulation-history">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
+          <span>Simulation History</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="system-status-card">
+          <div class="status-indicator-dot" id="db-status-dot"></div>
+          <div class="status-info">
+            <span class="status-title" id="db-status-text">Checking Database...</span>
+            <span class="status-desc" id="db-status-sub">MySQL 8.x / Local</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <!-- Top Application Header -->
+      <header class="top-header">
+        <div class="header-title-group">
+          <h1 id="page-title">System Dashboard</h1>
+          <p id="page-description">Real-time scheduling analytics and performance metrics</p>
+        </div>
+
+        <div class="header-actions">
+          <button class="btn btn-secondary btn-sm" id="btn-quick-sample">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            <span>Load Sample Task Set</span>
+          </button>
+
+          <button class="btn btn-secondary btn-sm" id="btn-open-report">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+              <polyline points="10 9 9 9 8 9"></polyline>
+            </svg>
+            <span>Generate Report</span>
+          </button>
+
+          <div class="sys-time-badge" id="system-clock">00:00:00 UTC</div>
+        </div>
+      </header>
+
+      <!-- Banner for MySQL Notice if disconnected -->
+      <div class="notice-banner hidden" id="db-notice-banner">
+        <div class="notice-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+        </div>
+        <div class="notice-content">
+          <strong>Database Notice:</strong>
+          <span id="db-notice-msg">MySQL is currently offline. You can simulate all scheduling algorithms and run analyses in-memory. To enable persistent history, configure .env and execute database/schema.sql.</span>
+        </div>
+        <button class="notice-close" id="btn-close-notice">&times;</button>
+      </div>
+
+      <!-- VIEW 1: DASHBOARD -->
+      <section class="view-panel active" id="view-dashboard">
+        <!-- Metric Cards Grid -->
+        <div class="stats-grid">
+          <div class="card stat-card">
+            <div class="stat-header">
+              <span class="stat-label">Active Tasks</span>
+              <div class="stat-icon icon-cyan">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="8.5" cy="7.5" r="4"></circle>
+                  <polyline points="17 11 19 13 23 9"></polyline>
+                </svg>
+              </div>
+            </div>
+            <div class="stat-value" id="dash-total-tasks">4</div>
+            <div class="stat-subtext">Periodic real-time task set</div>
+          </div>
+
+          <div class="card stat-card">
+            <div class="stat-header">
+              <span class="stat-label">CPU Utilization</span>
+              <div class="stat-icon icon-blue">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect>
+                  <rect x="9" y="9" width="6" height="6"></rect>
+                  <line x1="9" y1="1" x2="9" y2="4"></line>
+                  <line x1="15" y1="1" x2="15" y2="4"></line>
+                  <line x1="9" y1="20" x2="9" y2="23"></line>
+                  <line x1="15" y1="20" x2="15" y2="23"></line>
+                </svg>
+              </div>
+            </div>
+            <div class="stat-value" id="dash-utilization">85.0%</div>
+            <div class="stat-subtext" id="dash-util-subtext">U = &Sigma;(Ci / Ti)</div>
+          </div>
+
+          <div class="card stat-card">
+            <div class="stat-header">
+              <span class="stat-label">RMS Schedulability</span>
+              <div class="stat-icon icon-emerald" id="dash-rms-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+              </div>
+            </div>
+            <div class="stat-value status-text-schedulable" id="dash-rms-status">FEASIBLE</div>
+            <div class="stat-subtext" id="dash-rms-sub">Via Response Time Analysis</div>
+          </div>
+
+          <div class="card stat-card">
+            <div class="stat-header">
+              <span class="stat-label">EDF Schedulability</span>
+              <div class="stat-icon icon-emerald" id="dash-edf-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+              </div>
+            </div>
+            <div class="stat-value status-text-schedulable" id="dash-edf-status">FEASIBLE</div>
+            <div class="stat-subtext" id="dash-edf-sub">U = 85.0% &le; 100%</div>
+          </div>
+
+          <div class="card stat-card">
+            <div class="stat-header">
+              <span class="stat-label">Saved Simulations</span>
+              <div class="stat-icon icon-purple">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+                  <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
+                  <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+                </svg>
+              </div>
+            </div>
+            <div class="stat-value" id="dash-total-sims">0</div>
+            <div class="stat-subtext">Persisted in MySQL DB</div>
+          </div>
+        </div>
+
+        <!-- CPU Utilization Progress & Hyperperiod Details -->
+        <div class="grid-2-col">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title-group">
+                <h3>CPU Workload & Utilization Bound</h3>
+                <span class="card-subtitle">Comparison against theoretical schedulability bounds</span>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="progress-section">
+                <div class="progress-labels">
+                  <span>Current Utilization: <strong id="progress-util-text">85.0%</strong></span>
+                  <span>System Capacity: 100.0%</span>
+                </div>
+                <div class="progress-track">
+                  <div class="progress-bar-fill" id="utilization-bar-fill" style="width: 85%;"></div>
+                  <div class="bound-marker" id="ll-bound-marker" style="left: 75.7%;" title="Liu-Layland Bound (75.7%)">
+                    <span class="bound-label">LL Bound (75.7%)</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="spec-list">
+                <div class="spec-item">
+                  <span class="spec-name">Hyperperiod (LCM of Periods):</span>
+                  <span class="spec-val" id="dash-hyperperiod">20 ticks</span>
+                </div>
+                <div class="spec-item">
+                  <span class="spec-name">Liu-Layland Sufficient Bound:</span>
+                  <span class="spec-val" id="dash-ll-bound">75.68% (n = 4)</span>
+                </div>
+                <div class="spec-item">
+                  <span class="spec-name">Exact Response Time Analysis:</span>
+                  <span class="spec-val color-schedulable" id="dash-rta-verdict">All Tasks R_i &le; D_i (Schedulable)</span>
+                </div>
+                <div class="spec-item">
+                  <span class="spec-name">Dynamic EDF Bound (D = T):</span>
+                  <span class="spec-val color-schedulable" id="dash-edf-verdict">U = 0.85 &le; 1.00 (Schedulable)</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title-group">
+                <h3>Quick Actions & Control Hub</h3>
+                <span class="card-subtitle">Execute simulations and analyse task configurations</span>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="quick-actions-grid">
+                <button class="action-btn" id="dash-btn-run-rms">
+                  <div class="action-icon icon-blue">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                    </svg>
+                  </div>
+                  <div class="action-text">
+                    <strong>Simulate RMS</strong>
+                    <span>Rate Monotonic (Fixed Priority)</span>
+                  </div>
+                </button>
+
+                <button class="action-btn" id="dash-btn-run-edf">
+                  <div class="action-icon icon-cyan">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <polyline points="12 6 12 12 14 14"></polyline>
+                    </svg>
+                  </div>
+                  <div class="action-text">
+                    <strong>Simulate EDF</strong>
+                    <span>Earliest Deadline First (Dynamic)</span>
+                  </div>
+                </button>
+
+                <button class="action-btn" id="dash-btn-compare">
+                  <div class="action-icon icon-purple">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <line x1="18" y1="20" x2="18" y2="10"></line>
+                      <line x1="12" y1="20" x2="12" y2="4"></line>
+                      <line x1="6" y1="20" x2="6" y2="14"></line>
+                    </svg>
+                  </div>
+                  <div class="action-text">
+                    <strong>Compare Algorithms</strong>
+                    <span>RMS vs. EDF vs. FCFS Benchmarks</span>
+                  </div>
+                </button>
+
+                <button class="action-btn" id="dash-btn-configure">
+                  <div class="action-icon icon-emerald">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <circle cx="12" cy="12" r="3"></circle>
+                      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                    </svg>
+                  </div>
+                  <div class="action-text">
+                    <strong>Configure Task Set</strong>
+                    <span>Add, edit, or adjust tasks</span>
+                  </div>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Simulations Overview Table -->
+        <div class="card mt-4">
+          <div class="card-header">
+            <div class="card-title-group">
+              <h3>Recent Database Simulations</h3>
+              <span class="card-subtitle">Last recorded scheduling simulation executions</span>
+            </div>
+            <button class="btn btn-secondary btn-sm" id="btn-refresh-dash-sims">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="23 4 23 10 17 10"></polyline>
+                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+              </svg>
+              <span>Refresh</span>
+            </button>
+          </div>
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="data-table" id="table-recent-sims">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Algorithm</th>
+                    <th>Utilization</th>
+                    <th>Schedulability</th>
+                    <th>Misses</th>
+                    <th>Timestamp</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="tbody-recent-sims">
+                  <tr>
+                    <td colspan="7" class="text-center text-muted">Loading saved simulations...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW 2: TASK CONFIGURATION -->
+      <section class="view-panel" id="view-task-config">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title-group">
+              <h3>Periodic Task Set Configuration</h3>
+              <span class="card-subtitle">Define real-time execution times, periods, and relative deadlines</span>
+            </div>
+            <div class="header-button-row">
+              <button class="btn btn-primary btn-sm" id="btn-open-add-task">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="12" y1="5" x2="12" y2="19"></line>
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                <span>Add Task</span>
+              </button>
+              <button class="btn btn-secondary btn-sm" id="btn-load-sample-tasks">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="7 10 12 15 17 10"></polyline>
+                  <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                <span>Reset to Sample Set</span>
+              </button>
+              <button class="btn btn-danger btn-sm" id="btn-clear-all-tasks">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="3 6 5 6 21 6"></polyline>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                </svg>
+                <span>Clear All</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="data-table" id="table-tasks">
+                <thead>
+                  <tr>
+                    <th>Task ID</th>
+                    <th>Execution Time (C)</th>
+                    <th>Period (T)</th>
+                    <th>Relative Deadline (D)</th>
+                    <th>Arrival Time (A)</th>
+                    <th>Utilization (Ci / Ti)</th>
+                    <th>Rate Monotonic Priority</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="tbody-tasks">
+                  <!-- Dynamically Rendered -->
+                </tbody>
+                <tfoot>
+                  <tr class="table-summary-row">
+                    <td><strong>Total</strong></td>
+                    <td id="tfoot-total-c">-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td id="tfoot-total-u"><strong>85.0%</strong></td>
+                    <td colspan="2"><span class="badge badge-success" id="tfoot-feasibility-badge">FEASIBLE</span></td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Task Set Theoretical Summary -->
+        <div class="grid-2-col mt-4">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title-group">
+                <h3>Task Set Parameters</h3>
+                <span class="card-subtitle">Mathematical properties of current task configuration</span>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="spec-list">
+                <div class="spec-item">
+                  <span class="spec-name">Total Number of Tasks (n):</span>
+                  <span class="spec-val" id="cfg-task-count">4</span>
+                </div>
+                <div class="spec-item">
+                  <span class="spec-name">Total System Utilization (U):</span>
+                  <span class="spec-val" id="cfg-total-u">85.00%</span>
+                </div>
+                <div class="spec-item">
+                  <span class="spec-name">Hyperperiod LCM(T1, ..., Tn):</span>
+                  <span class="spec-val" id="cfg-hyperperiod">20 ticks</span>
+                </div>
+                <div class="spec-item">
+                  <span class="spec-name">Deadline Model:</span>
+                  <span class="spec-val" id="cfg-deadline-model">Implicit Deadlines (Di = Ti)</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title-group">
+                <h3>College OS Lab Reference</h3>
+                <span class="card-subtitle">Formulas and priority rules applied</span>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="info-callout">
+                <h4>Rate Monotonic Scheduling (RMS)</h4>
+                <p>Optimal static-priority scheduling. Priority is inversely proportional to Period \(T_i\). Shorter period = higher priority.</p>
+              </div>
+              <div class="info-callout mt-2">
+                <h4>Earliest Deadline First (EDF)</h4>
+                <p>Optimal dynamic-priority scheduling. Priority is assigned dynamically based on absolute deadline \(d_{i,k} = r_{i,k} + D_i\). Earliest deadline = highest priority.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW 3: SCHEDULABILITY ANALYSIS -->
+      <section class="view-panel" id="view-schedulability">
+        <!-- Theoretical Analysis Header Cards -->
+        <div class="grid-3-col">
+          <div class="card">
+            <div class="card-header">
+              <h4>Total Utilization Test</h4>
+            </div>
+            <div class="card-body">
+              <div class="formula-box">
+                <code>U = &Sigma; (C_i / T_i)</code>
+              </div>
+              <div class="test-result-box">
+                <div class="result-value" id="test-u-val">U = 0.850 (85.0%)</div>
+                <div class="result-status" id="test-u-status">
+                  <span class="badge badge-success">&le; 100% (Necessary Condition Met)</span>
+                </div>
+              </div>
+              <p class="text-secondary text-sm mt-2">If U &gt; 1, no scheduling algorithm can schedule the task set without missing deadlines.</p>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h4>Liu & Layland Bound (RMS)</h4>
+            </div>
+            <div class="card-body">
+              <div class="formula-box">
+                <code>U_LL(n) = n &times; (2^(1/n) - 1)</code>
+              </div>
+              <div class="test-result-box">
+                <div class="result-value" id="test-ll-val">U_LL(4) = 75.68%</div>
+                <div class="result-status" id="test-ll-status">
+                  <span class="badge badge-warning">U &gt; U_LL (Inconclusive)</span>
+                </div>
+              </div>
+              <p class="text-secondary text-sm mt-2">Sufficient but NOT necessary. When U &gt; U_LL, tasks may still be schedulable! Exact Response Time Analysis is required.</p>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h4>EDF Feasibility Test</h4>
+            </div>
+            <div class="card-body">
+              <div class="formula-box">
+                <code>U &le; 1.0 (for D_i = T_i)</code>
+              </div>
+              <div class="test-result-box">
+                <div class="result-value" id="test-edf-val">85.0% &le; 100.0%</div>
+                <div class="result-status" id="test-edf-status">
+                  <span class="badge badge-success">Guaranteed Schedulable</span>
+                </div>
+              </div>
+              <p class="text-secondary text-sm mt-2">For implicit deadlines, U &le; 1 is necessary and sufficient. EDF achieves 100% theoretical CPU utilization.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Exact Response Time Analysis (RTA) Iteration Table -->
+        <div class="card mt-4">
+          <div class="card-header">
+            <div class="card-title-group">
+              <h3>Exact Response Time Analysis (RTA) for RMS</h3>
+              <span class="card-subtitle">Joseph & Pandya recursive response-time recurrence iteration: R_i^(k+1) = C_i + &Sigma; &lceil;R_i^(k) / T_j&rceil; &times; C_j</span>
+            </div>
+          </div>
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="data-table" id="table-rta">
+                <thead>
+                  <tr>
+                    <th>Priority (RMS)</th>
+                    <th>Task</th>
+                    <th>Computation (C_i)</th>
+                    <th>Period (T_i)</th>
+                    <th>Deadline (D_i)</th>
+                    <th>Iterative Recurrence Steps</th>
+                    <th>Worst-Case Response Time (R_i)</th>
+                    <th>Schedulability Verdict</th>
+                  </tr>
+                </thead>
+                <tbody id="tbody-rta">
+                  <!-- Generated via script.js -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="card-footer">
+            <div class="rta-summary-banner" id="rta-summary-banner">
+              <strong>RTA Conclusion:</strong> All tasks satisfy \(R_i \le D_i\). Therefore, despite exceeding the Liu-Layland bound (85% &gt; 75.7%), the task set is <strong>100% SCHEDULABLE</strong> under Rate Monotonic Scheduling!
+            </div>
+          </div>
+        </div>
+
+        <!-- Academic Explanation Card -->
+        <div class="card mt-4">
+          <div class="card-header">
+            <div class="card-title-group">
+              <h3>College Viva & Theoretical Schedulability Explanations</h3>
+              <span class="card-subtitle">Key concepts for professor evaluation and exam viva questions</span>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="explanation-grid">
+              <div class="explanation-item">
+                <h4>Why does Liu-Layland bound fail while RTA passes?</h4>
+                <p>Liu & Layland's bound (\(U_{LL} = n(2^{1/n}-1)\)) is a <em>sufficient</em> test, not a necessary test. As \(n \to \infty\), the bound approaches \(\ln(2) \approx 69.3\%\). Task sets with utilization between \(U_{LL}\) and \(1.0\) may or may not be schedulable. Exact Response Time Analysis calculates the exact critical-instant response time, resolving the exact schedulability.</p>
+              </div>
+              <div class="explanation-item">
+                <h4>EDF Optimality & Arbitrary Deadlines</h4>
+                <p>Earliest Deadline First is an optimal dynamic scheduling algorithm on single processor systems. For implicit deadline systems (\(D_i = T_i\)), a task set is schedulable if and only if \(U \le 1\). If constrained deadlines exist (\(D_i < T_i\)), the exact condition requires Demand Bound Function (DBF) analysis \(h(t) \le t\) for all \(t \ge 0\).</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW 4: CPU SIMULATION & GANTT CHART -->
+      <section class="view-panel" id="view-cpu-simulation">
+        <!-- Simulation Control Bar -->
+        <div class="card simulation-control-card">
+          <div class="sim-control-flex">
+            <div class="control-group">
+              <label for="sim-algo-select">Algorithm</label>
+              <select class="form-control" id="sim-algo-select">
+                <option value="RMS" selected>Rate Monotonic Scheduling (RMS)</option>
+                <option value="EDF">Earliest Deadline First (EDF)</option>
+                <option value="FCFS">First-Come First-Served (FCFS)</option>
+              </select>
+            </div>
+
+            <div class="control-group">
+              <label for="sim-horizon-input">Simulation Horizon (Ticks)</label>
+              <div class="input-with-button">
+                <input type="number" class="form-control" id="sim-horizon-input" value="20" min="5" max="200" step="1">
+                <button class="btn btn-secondary btn-xs" id="btn-set-hyperperiod" title="Set to Hyperperiod LCM">Hyperperiod</button>
+              </div>
+            </div>
+
+            <div class="control-group action-buttons-group">
+              <label>Run Simulation</label>
+              <div class="btn-group">
+                <button class="btn btn-primary" id="btn-run-simulation">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                  </svg>
+                  <span>Simulate</span>
+                </button>
+                <button class="btn btn-success" id="btn-save-simulation">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                    <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                    <polyline points="7 3 7 8 15 8"></polyline>
+                  </svg>
+                  <span>Save to MySQL</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Gantt Chart Canvas & Playback Bar -->
+        <div class="card mt-4">
+          <div class="card-header">
+            <div class="card-title-group">
+              <h3 id="gantt-title">CPU Execution Timeline (Gantt Chart)</h3>
+              <span class="card-subtitle" id="gantt-subtitle">Algorithm: RMS | Horizon: 0 to 20 ticks</span>
+            </div>
+
+            <!-- Playback Controls -->
+            <div class="playback-controls">
+              <button class="btn btn-secondary btn-icon" id="btn-play-pause" title="Play / Pause Animation">
+                <svg id="icon-play" viewBox="0 0 24 24" fill="currentColor">
+                  <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                </svg>
+                <svg id="icon-pause" viewBox="0 0 24 24" fill="currentColor" class="hidden">
+                  <rect x="6" y="4" width="4" height="16"></rect>
+                  <rect x="14" y="4" width="4" height="16"></rect>
+                </svg>
+              </button>
+              <button class="btn btn-secondary btn-icon" id="btn-step-forward" title="Step Forward 1 Tick">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                  <polygon points="5 4 15 12 5 20 5 4"></polygon>
+                  <line x1="19" y1="5" x2="19" y2="19" stroke="currentColor" stroke-width="2"></line>
+                </svg>
+              </button>
+              <button class="btn btn-secondary btn-icon" id="btn-reset-playback" title="Reset Timeline to t=0">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M1 4v6h6"></path>
+                  <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+                </svg>
+              </button>
+
+              <div class="speed-select-group">
+                <span>Speed:</span>
+                <select class="form-control form-control-sm" id="playback-speed-select">
+                  <option value="1000">0.5x</option>
+                  <option value="500" selected>1.0x</option>
+                  <option value="250">2.0x</option>
+                  <option value="100">5.0x</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Gantt Canvas Container -->
+          <div class="card-body gantt-canvas-wrapper">
+            <div class="gantt-legend" id="gantt-legend">
+              <!-- Dynamically populated task color chips -->
+            </div>
+            <div class="canvas-scroll-container">
+              <canvas id="ganttCanvas" width="1000" height="340"></canvas>
+            </div>
+          </div>
+
+          <!-- Live Telemetry Bar -->
+          <div class="card-footer telemetry-footer">
+            <div class="telemetry-item">
+              <span class="telemetry-label">Current Time (t):</span>
+              <span class="telemetry-value" id="live-time-val">0</span>
+            </div>
+            <div class="telemetry-item">
+              <span class="telemetry-label">Active CPU State:</span>
+              <span class="telemetry-value" id="live-cpu-state">Idle</span>
+            </div>
+            <div class="telemetry-item">
+              <span class="telemetry-label">Ready Queue:</span>
+              <span class="telemetry-value" id="live-ready-queue">[ None ]</span>
+            </div>
+            <div class="telemetry-item">
+              <span class="telemetry-label">Preemptions:</span>
+              <span class="telemetry-value" id="live-preemptions">0</span>
+            </div>
+            <div class="telemetry-item">
+              <span class="telemetry-label">Deadline Misses:</span>
+              <span class="telemetry-value text-danger" id="live-deadline-misses">0</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Discrete Event Trace Table -->
+        <div class="card mt-4">
+          <div class="card-header">
+            <div class="card-title-group">
+              <h3>Discrete-Time Execution Log</h3>
+              <span class="card-subtitle">Cycle-by-cycle scheduler decisions, task releases, preemption and job completions</span>
+            </div>
+          </div>
+          <div class="card-body p-0">
+            <div class="table-responsive table-scroll-y">
+              <table class="data-table" id="table-event-log">
+                <thead>
+                  <tr>
+                    <th>Time (t)</th>
+                    <th>Event Type</th>
+                    <th>Task</th>
+                    <th>Remaining Work</th>
+                    <th>Absolute Deadline</th>
+                    <th>Event Details & Scheduler Decision</th>
+                  </tr>
+                </thead>
+                <tbody id="tbody-event-log">
+                  <!-- Populated by simulation engine -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW 5: ALGORITHM COMPARISON -->
+      <section class="view-panel" id="view-algorithm-comparison">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title-group">
+              <h3>Multi-Algorithm Benchmark & Comparison</h3>
+              <span class="card-subtitle">Simulate the identical task set concurrently under RMS, EDF, and FCFS</span>
+            </div>
+            <button class="btn btn-primary btn-sm" id="btn-run-all-comparisons">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+              </svg>
+              <span>Execute All Benchmarks</span>
+            </button>
+          </div>
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="data-table" id="table-comparison">
+                <thead>
+                  <tr>
+                    <th>Algorithm</th>
+                    <th>Type</th>
+                    <th>Schedulability</th>
+                    <th>CPU Utilization</th>
+                    <th>Completed Jobs</th>
+                    <th>Deadline Misses</th>
+                    <th>Preemptions</th>
+                    <th>CPU Idle Ticks</th>
+                    <th>Efficiency Score</th>
+                  </tr>
+                </thead>
+                <tbody id="tbody-comparison">
+                  <!-- Dynamically populated -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Comparative Visual Graphs -->
+        <div class="grid-2-col mt-4">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title-group">
+                <h3>Completed Jobs vs Deadline Misses</h3>
+                <span class="card-subtitle">Real-time deadline fidelity comparison</span>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="benchmark-bar-group" id="benchmark-jobs-chart">
+                <!-- Bar chart rendered dynamically -->
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title-group">
+                <h3>Scheduling Overhead & Context Switches</h3>
+                <span class="card-subtitle">Comparison of preemptive interruptions and idle time</span>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="benchmark-bar-group" id="benchmark-switches-chart">
+                <!-- Bar chart rendered dynamically -->
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- In-Depth Comparative Evaluation Card -->
+        <div class="card mt-4">
+          <div class="card-header">
+            <div class="card-title-group">
+              <h3>In-Depth Algorithm Characteristics</h3>
+              <span class="card-subtitle">Academic assessment of scheduling properties</span>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="comparison-summary-grid">
+              <div class="comp-card">
+                <h4>Rate Monotonic Scheduling (RMS)</h4>
+                <ul>
+                  <li><strong>Priority:</strong> Static (Fixed based on \(1/T_i\))</li>
+                  <li><strong>Preemption:</strong> Preemptive</li>
+                  <li><strong>Implementation Overhead:</strong> Low (simple static priority queues in OS kernels)</li>
+                  <li><strong>Worst-case Schedulable Bound:</strong> \(n(2^{1/n}-1) \approx 69.3\%\) to \(82.8\%\)</li>
+                  <li><strong>Optimality:</strong> Optimal among all fixed-priority algorithms</li>
+                </ul>
+              </div>
+
+              <div class="comp-card">
+                <h4>Earliest Deadline First (EDF)</h4>
+                <ul>
+                  <li><strong>Priority:</strong> Dynamic (Changes with each job's absolute deadline \(d_{i,k}\))</li>
+                  <li><strong>Preemption:</strong> Preemptive</li>
+                  <li><strong>Implementation Overhead:</strong> Moderate (requires dynamic sorting or heap priority queue)</li>
+                  <li><strong>Worst-case Schedulable Bound:</strong> 100.0% (\(U \le 1\))</li>
+                  <li><strong>Optimality:</strong> Optimal among all dynamic preemptive algorithms</li>
+                </ul>
+              </div>
+
+              <div class="comp-card">
+                <h4>First-Come First-Served (FCFS)</h4>
+                <ul>
+                  <li><strong>Priority:</strong> Arrival Time order</li>
+                  <li><strong>Preemption:</strong> Non-Preemptive</li>
+                  <li><strong>Implementation Overhead:</strong> Lowest (simple FIFO queue)</li>
+                  <li><strong>Suitability:</strong> Poor for real-time periodic systems (causes severe deadline misses due to convoy effect)</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW 6: SIMULATION HISTORY -->
+      <section class="view-panel" id="view-simulation-history">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title-group">
+              <h3>Database Simulation History</h3>
+              <span class="card-subtitle">Stored runs in MySQL database `realtime_scheduler`</span>
+            </div>
+            <button class="btn btn-secondary btn-sm" id="btn-reload-history">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="23 4 23 10 17 10"></polyline>
+                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+              </svg>
+              <span>Reload History</span>
+            </button>
+          </div>
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="data-table" id="table-history">
+                <thead>
+                  <tr>
+                    <th>Simulation ID</th>
+                    <th>Algorithm</th>
+                    <th>CPU Utilization</th>
+                    <th>Schedulability</th>
+                    <th>Deadline Misses</th>
+                    <th>Horizon</th>
+                    <th>Tasks Count</th>
+                    <th>Recorded At</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="tbody-history">
+                  <!-- Dynamically rendered -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- MODAL: ADD / EDIT TASK -->
+  <div class="modal-overlay hidden" id="modal-task-form">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 id="task-modal-title">Add Periodic Task</h3>
+        <button class="modal-close" id="btn-close-task-modal">&times;</button>
+      </div>
+      <form id="form-task">
+        <input type="hidden" id="task-edit-index" value="-1">
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="input-task-name">Task Name / ID</label>
+            <input type="text" class="form-control" id="input-task-name" placeholder="e.g. T1" required>
+            <span class="form-hint">Unique identifier for the task</span>
+          </div>
+
+          <div class="form-row-2">
+            <div class="form-group">
+              <label for="input-task-c">Execution Time (C)</label>
+              <input type="number" class="form-control" id="input-task-c" min="1" max="100" value="1" required>
+              <span class="form-hint">Worst-case computation ticks</span>
+            </div>
+
+            <div class="form-group">
+              <label for="input-task-t">Period (T)</label>
+              <input type="number" class="form-control" id="input-task-t" min="1" max="500" value="4" required>
+              <span class="form-hint">Time interval between releases</span>
+            </div>
+          </div>
+
+          <div class="form-row-2">
+            <div class="form-group">
+              <label for="input-task-d">Relative Deadline (D)</label>
+              <input type="number" class="form-control" id="input-task-d" min="1" max="500" value="4" required>
+              <span class="form-hint">Default is D = T (implicit deadline)</span>
+            </div>
+
+            <div class="form-group">
+              <label for="input-task-a">Arrival Time (A)</label>
+              <input type="number" class="form-control" id="input-task-a" min="0" max="100" value="0" required>
+              <span class="form-hint">Initial phase offset (default 0)</span>
+            </div>
+          </div>
+
+          <div class="form-error-msg hidden" id="task-form-error"></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" id="btn-cancel-task-modal">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="btn-save-task">Save Task</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: VIEW SAVED SIMULATION DETAILS -->
+  <div class="modal-overlay hidden" id="modal-sim-details">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-header">
+        <h3 id="sim-details-title">Simulation Record Details</h3>
+        <button class="modal-close" id="btn-close-sim-details">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="sim-meta-strip" id="sim-meta-strip">
+          <!-- Populated dynamically -->
+        </div>
+
+        <h4 class="mt-3">Associated Task Set</h4>
+        <div class="table-responsive mt-1">
+          <table class="data-table" id="table-details-tasks">
+            <thead>
+              <tr>
+                <th>Task Name</th>
+                <th>Execution Time (C)</th>
+                <th>Period (T)</th>
+                <th>Deadline (D)</th>
+                <th>Arrival Time</th>
+                <th>Utilization</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-details-tasks"></tbody>
+          </table>
+        </div>
+
+        <h4 class="mt-3">Execution Timeline Slices</h4>
+        <div class="table-responsive table-scroll-y mt-1" style="max-height: 220px;">
+          <table class="data-table" id="table-details-results">
+            <thead>
+              <tr>
+                <th>Interval</th>
+                <th>Task Name</th>
+                <th>Start Time</th>
+                <th>End Time</th>
+                <th>Job Absolute Deadline</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-details-results"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" id="btn-load-into-workbench">Load into Active Workbench</button>
+        <button type="button" class="btn btn-secondary" id="btn-dismiss-details">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: PRINTABLE REPORT -->
+  <div class="modal-overlay hidden" id="modal-report">
+    <div class="modal-dialog modal-xl">
+      <div class="modal-header">
+        <h3>Project Technical Report</h3>
+        <div class="report-header-actions">
+          <button class="btn btn-primary btn-sm" id="btn-trigger-print">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="6 9 6 2 18 2 18 9"></polyline>
+              <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+              <rect x="6" y="14" width="12" height="8"></rect>
+            </svg>
+            <span>Print / Save as PDF</span>
+          </button>
+          <button class="modal-close" id="btn-close-report">&times;</button>
+        </div>
+      </div>
+      <div class="modal-body report-printable-content" id="report-printable-area">
+        <!-- Rendered dynamically by script.js -->
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" id="btn-dismiss-report">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <script src="script.js"></script>
+</body>
+</html>
